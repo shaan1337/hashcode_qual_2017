@@ -28,12 +28,13 @@ namespace solution
             Prefill();
 
             AddAllVideos();
-            MAXSCORE = CalculateScore();            
+            MAXSCORE = CalculateScore();
             Console.Out.WriteLine("Max theoretical score: {0}", 1000.0*MAXSCORE/TOTALREQUESTS);
             //PrintAssignment(Assignment);
 
             while(true){
-                AddAllVideos();
+                for(int c=0;c<C;c++)
+                    Assignment[c].Clear();
                 var score = Solve();
                 if(score > BestScore){
                     Console.Out.WriteLine("Best Score: {0}, Previous: {1}", (1000.0*score/TOTALREQUESTS), (1000.0*BestScore/TOTALREQUESTS));
@@ -62,28 +63,38 @@ namespace solution
                 LAT_E_TO_C[i,j] = int.MaxValue;
         }
 
-        private static long Solve()
-        {            
-            List<int> overloaded = new List<int>();
-            for(int c=0;c<C;c++){
-                long spaceUsed = 0L;
-                foreach(var vid in Assignment[c]){
-                    spaceUsed += S[vid];
-                }
-                if(spaceUsed > X){
-                    overloaded.Add(c);
-                }
-                SpaceUsed[c] = spaceUsed;
-            }
+        private static IEnumerable<int> Shuffle(List<int> list){
+            for(var i=0;i<list.Count;i++){
+                if(i==list.Count-1){
+                    yield return list[i];
+                } else{
+                    int rem = list.Count - i;
+                    var val = i + Random.Next()%rem;
+                    yield return list[val];
 
-            while(overloaded.Count > 0){
-                int cid = overloaded[Random.Next()%overloaded.Count];
-                var videos = new List<int>(Assignment[cid]);
-                var vid = videos[Random.Next()%videos.Count];
-                Assignment[cid].Remove(vid);
-                SpaceUsed[cid] -= S[vid];
-                if(SpaceUsed[cid] <= X){
-                    overloaded.Remove(cid);
+                    var tmp = list[val];
+                    list[val] = list[i];
+                    list[i] = tmp;
+                }
+            }
+            yield break;
+        }
+        private static long Solve()
+        {
+            /* Random solution:
+                For each cache server:
+                  1. Shuffle videos, taking one at a time until cache server is full
+             */
+            List<int> videoIdx = new List<int>();
+            for(int i=0;i<V;i++) videoIdx.Add(i);
+
+            for(int c=0;c<C;c++){
+                var usedSpace = 0;
+                foreach(var vIdx in Shuffle(videoIdx)){
+                    if(usedSpace + S[vIdx] <= X){
+                        Assignment[c].Add(vIdx);
+                        usedSpace += S[vIdx];
+                    }
                 }
             }
 
