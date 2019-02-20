@@ -33,8 +33,10 @@ namespace solution
             //PrintAssignment(Assignment);
 
             while(true){
-                for(int c=0;c<C;c++)
+                for(int c=0;c<C;c++){
                     Assignment[c].Clear();
+                    SpaceUsed[c] = 0;
+                }
                 var score = Solve();
                 if(score > BestScore){
                     Console.Out.WriteLine("Best Score: {0}, Previous: {1}", (1000.0*score/TOTALREQUESTS), (1000.0*BestScore/TOTALREQUESTS));
@@ -116,11 +118,9 @@ namespace solution
                     var v = vv.Item2;
                     var n = vv.Item1;
                     foreach(var c in EDGES_E_TO_C[e]){
-                        if(!Assignment[c].Contains(v)){
-                            if(SpaceUsed[c] + S[v] <= X){
+                        if(!Assignment[c].Contains(v) && SpaceUsed[c] + S[v] <= X && Random.Next()%2 == 0){
                                 Assignment[c].Add(v);
                                 SpaceUsed[c] += S[v];
-                            }
                         }
                     }
                 }
