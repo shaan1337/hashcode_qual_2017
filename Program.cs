@@ -81,23 +81,52 @@ namespace solution
         }
         private static long Solve()
         {
-            /* Random solution:
-                For each cache server:
-                  1. Shuffle videos, taking one at a time until cache server is full
-             */
-            List<int> videoIdx = new List<int>();
-            for(int i=0;i<V;i++) videoIdx.Add(i);
+            List<Tuple<long, int> > bestLatencySavingsEndpoints = new List<Tuple<long, int>>();
+            for(var e=0;e<E;e++){
+                var maxLatency = 0L;
+                foreach(var c in EDGES_E_TO_C[e]){
+                    maxLatency = Math.Max(LAT_E_TO_C[e,c], maxLatency);
+                }
+                var minLatencySavings = LAT_E_TO_D[e] - maxLatency;
+                bestLatencySavingsEndpoints.Add(new Tuple<long,int>(minLatencySavings, e));
+            }
 
-            for(int c=0;c<C;c++){
-                var usedSpace = 0;
-                foreach(var vIdx in Shuffle(videoIdx)){
-                    if(usedSpace + S[vIdx] <= X){
-                        Assignment[c].Add(vIdx);
-                        usedSpace += S[vIdx];
+            bestLatencySavingsEndpoints.Sort();
+            bestLatencySavingsEndpoints.Reverse();
+
+            Dictionary<int, List<Tuple<int, int> > > endpointToVideoRequests = new Dictionary<int, List<Tuple<int, int>>>();
+            for(int e=0;e<E;e++) endpointToVideoRequests[e] = new List<Tuple<int, int>>();
+
+            for(int r=0;r<R;r++){
+                int v = REQ[r,0];
+                int e = REQ[r,1];
+                int n = REQ[r,2];
+
+                endpointToVideoRequests[e].Add(new Tuple<int, int>(n, v));
+            }
+
+            for(int e=0;e<E;e++){
+                endpointToVideoRequests[e].Sort();
+                endpointToVideoRequests[e].Reverse();
+            }
+
+            foreach(var ee in bestLatencySavingsEndpoints){
+                var e = ee.Item2;
+                foreach(var vv in endpointToVideoRequests[e]){
+                    var v = vv.Item2;
+                    var n = vv.Item1;
+                    foreach(var c in EDGES_E_TO_C[e]){
+                        if(!Assignment[c].Contains(v)){
+                            if(SpaceUsed[c] + S[v] <= X){
+                                Assignment[c].Add(v);
+                                SpaceUsed[c] += S[v];
+                            }
+                        }
                     }
                 }
             }
 
+            VerifySolution();
             return CalculateScore();
         }
 
@@ -149,6 +178,19 @@ namespace solution
             }
 
             return score;
+        }
+
+        private static bool VerifySolution(){
+            for(int c=0;c<C;c++){
+                var spaceUsed = 0;
+                foreach(var v in Assignment[c]){
+                    spaceUsed += S[v];
+                }
+                if(spaceUsed > X){
+                    throw new Exception("Invalid solution!");
+                }
+            }
+            return true;
         }
 
         static void ReadInput(){
