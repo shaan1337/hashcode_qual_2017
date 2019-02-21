@@ -42,7 +42,7 @@ namespace solution
                     Console.Out.WriteLine("Best Score: {0}, Previous: {1}", (1000.0*score/TOTALREQUESTS), (1000.0*BestScore/TOTALREQUESTS));
                     BestScore = score;
                     BestAssignment = Assignment;
-                    //PrintAssignment(BestAssignment);
+                    PrintAssignment(BestAssignment);
                 }
             }
         }
@@ -112,19 +112,26 @@ namespace solution
                 endpointToVideoRequests[e].Reverse();
             }
 
+            var hasMore = false;
+            do{
+            hasMore = false;
             foreach(var ee in bestLatencySavingsEndpoints){
                 var e = ee.Item2;
                 foreach(var vv in endpointToVideoRequests[e]){
                     var v = vv.Item2;
                     var n = vv.Item1;
                     foreach(var c in EDGES_E_TO_C[e]){
-                        if(!Assignment[c].Contains(v) && SpaceUsed[c] + S[v] <= X && Random.Next()%2 == 0){
-                                Assignment[c].Add(v);
-                                SpaceUsed[c] += S[v];
+                        if(!Assignment[c].Contains(v) && SpaceUsed[c] + S[v] <= X){
+                                hasMore = true;
+                                if(Random.Next()%2 == 0){
+                                    Assignment[c].Add(v);
+                                    SpaceUsed[c] += S[v];
+                                }
                         }
                     }
                 }
             }
+            }while(hasMore);
 
             VerifySolution();
             return CalculateScore();
