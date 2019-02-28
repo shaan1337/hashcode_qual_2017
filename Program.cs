@@ -22,8 +22,8 @@ namespace solution
         static long []SpaceUsed= new long[1005];
         static long BestScore = 0L;
         static Random Random = new Random();
-        static C5.IPriorityQueue<Tuple<long,int,int>> sortedLatencyGains = new IntervalHeap<Tuple<long,int,int>>();
-        static C5.IPriorityQueueHandle<Tuple<long, int, int>>[,] latencyGainHandles = new C5.IPriorityQueueHandle<Tuple<long, int, int>>[1005,10005];
+        static C5.IPriorityQueue<Tuple<double,int,int>> sortedLatencyGains = new IntervalHeap<Tuple<double,int,int>>();
+        static C5.IPriorityQueueHandle<Tuple<double, int, int>>[,] latencyGainHandles = new C5.IPriorityQueueHandle<Tuple<double, int, int>>[1005,10005];
 
         static void Main(string[] args)
         {
@@ -105,8 +105,8 @@ namespace solution
                         var latencyGain = (long)(LAT_E_TO_D[e] - LAT_E_TO_C[e,c]) * numRequests;
                         totalLatencyGain += latencyGain;
                     }
-                    C5.IPriorityQueueHandle<Tuple<long, int, int>> handle = null;
-                    sortedLatencyGains.Add(ref handle, new Tuple<long, int, int>(totalLatencyGain, c, v));
+                    C5.IPriorityQueueHandle<Tuple<double, int, int>> handle = null;
+                    sortedLatencyGains.Add(ref handle, new Tuple<double, int, int>(1.0*totalLatencyGain/S[v], c, v));
                     latencyGainHandles[c,v] = handle;
                     latencyGains[c,v] = totalLatencyGain;
                 }
@@ -150,10 +150,10 @@ namespace solution
 
                 for(var cx=0;cx<C;cx++){
                     var handle = latencyGainHandles[cx, v];
-                    Tuple<long, int, int> item;
+                    Tuple<double, int, int> item;
                     if(sortedLatencyGains.Find(handle, out item)){
                         sortedLatencyGains.Delete(handle);
-                        sortedLatencyGains.Add(ref handle, new Tuple<long, int, int>(latencyGains[cx, v], cx, v));
+                        sortedLatencyGains.Add(ref handle, new Tuple<double, int, int>(1.0*latencyGains[cx, v]/S[v], cx, v));
                     }
                 }
             }
